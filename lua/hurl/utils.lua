@@ -141,9 +141,19 @@ util.render_header_table = function(headers)
   for k, _ in pairs(headers) do
     maxKeyLength = math.max(maxKeyLength, #k)
   end
-
   local line = 0
+
+  -- Add 'url' header first if it exists
+  if headers['url'] then
+    table.insert(result, string.format('%-' .. maxKeyLength .. 's | %s', 'url', headers['url']))
+    line = line + 1
+    headers['url'] = nil -- Remove 'url' to avoid duplication
+  end
   for k, v in pairs(headers) do
+    if k == 'url' then
+      -- Skip 'url' header if it exists
+      continue
+    end
     line = line + 1
     if line == 1 then
       -- Add header for the table view
