@@ -150,21 +150,19 @@ util.render_header_table = function(headers)
     headers['url'] = nil -- Remove 'url' to avoid duplication
   end
   for k, v in pairs(headers) do
-    if k == 'url' then
-      -- Skip 'url' header if it exists
-      continue
-    end
-    line = line + 1
-    if line == 1 then
-      -- Add header for the table view
-      table.insert(
-        result,
-        string.format('%-' .. maxKeyLength .. 's | %s', 'Header Key', 'Header Value')
-      )
-
+    if k ~= 'url' then
       line = line + 1
+      if line == 1 then
+        -- Add header for the table view
+        table.insert(
+          result,
+          string.format('%-' .. maxKeyLength .. 's | %s', 'Header Key', 'Header Value')
+        )
+
+        line = line + 1
+      end
+      table.insert(result, string.format('%-' .. maxKeyLength .. 's | %s', k, v))
     end
-    table.insert(result, string.format('%-' .. maxKeyLength .. 's | %s', k, v))
   end
 
   return {
