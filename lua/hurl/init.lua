@@ -5,6 +5,10 @@ local default_config = {
   mode = 'split',
   show_notification = false,
   auto_close = true,
+  url = {
+    show = true,
+    format_without_params = true,
+  },
   -- Default split options
   split_position = 'right',
   split_size = '50%',
@@ -51,6 +55,8 @@ local default_config = {
     next_panel = '<C-n>', -- Move to the next response popup window
     prev_panel = '<C-p>', -- Move to the previous response popup window
   },
+  -- File root directory for uploading files
+  -- file_root = vim.fn.getcwd(),
 }
 --- Global configuration for entire plugin, easy to access from anywhere
 _HURL_GLOBAL_CONFIG = default_config
