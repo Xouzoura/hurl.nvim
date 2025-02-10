@@ -8,7 +8,9 @@ local default_config = {
   url = {
     show = true,
     format_without_params = true,
+    show_body_and_query = true,
   },
+  headers = { 'content-length', 'content-type', 'date', 'server', 'status' },
   -- Default split options
   split_position = 'right',
   split_size = '50%',

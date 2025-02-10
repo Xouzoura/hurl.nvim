@@ -132,7 +132,14 @@ util.format = function(body, type)
   util.log_info('formatted body: ' .. table.concat(stdout, '\n'))
   return stdout
 end
-
+local function contains(table, value)
+  for _, v in ipairs(table) do
+    if v == value then
+      return true
+    end
+  end
+  return false
+end
 --- Render header table
 ---@param headers table
 util.render_header_table = function(headers)
@@ -147,10 +154,21 @@ util.render_header_table = function(headers)
   if headers['url'] then
     table.insert(result, string.format('%-' .. maxKeyLength .. 's | %s', 'url', headers['url']))
     line = line + 1
-    headers['url'] = nil -- Remove 'url' to avoid duplication
+    headers['url'] = nil
+  end
+  if headers['params'] and type(headers['params']) == 'table' then
+    table.insert(result, string.format('%-' .. maxKeyLength .. 's | %s', 'Params/Body', ''))
+    line = line + 1
+
+    for k, v in pairs(headers['params']) do
+      local formatted_value = string.format('{%s, %s}', k, v)
+      table.insert(result, string.format('%-' .. maxKeyLength .. 's | %s', '', formatted_value))
+      line = line + 1
+    end
+    headers['params'] = nil
   end
   for k, v in pairs(headers) do
-    if k ~= 'url' then
+    if contains(_HURL_GLOBAL_CONFIG.headers, k) then
       line = line + 1
       if line == 1 then
         -- Add header for the table view
@@ -320,31 +338,58 @@ util.has_file_in_opts = function(opts)
 
   return false
 end
--- Function to extract the URL from the .hurl file
+-- Function to extract the URL (and params) from the .hurl file
 util.get_url_from_hurl_file = function(file_path)
   local url = nil
+  local params = {}
+  local in_params_section = false
   local file = io.open(file_path, 'r')
 
   if file then
     for line in file:lines() do
+      -- Trim whitespace
       line = line:gsub('^%s*(.-)%s*$', '%1')
       line = line:gsub('%s+', ' ')
-      -- NOTE: somehow i can not make regex work here
-      local matchcase = string.find(line, 'GET ')
-        or string.find(line, 'POST ')
-        or string.find(line, 'PUT ')
-        or string.find(line, 'DELETE ')
-        or string.find(line, 'PATCH ')
-      if matchcase then
-        return line
+
+      -- Skip empty lines and comments
+      if line ~= '' and not line:match('^#') then
+        -- Check for HTTP methods
+        local method_match = string.find(line, 'GET ')
+          or string.find(line, 'POST ')
+          or string.find(line, 'PUT ')
+          or string.find(line, 'DELETE ')
+          or string.find(line, 'PATCH ')
+
+        if method_match then
+          url = line
+          in_params_section = false
+        -- Check for parameter sections
+        elseif line == '[QueryStringParams]' or line == '[FormParams]' then
+          in_params_section = true
+        elseif line:match('^{%s*$') then
+          -- Start of JSON body
+          in_params_section = true
+          params['_body'] = ''
+        -- Collect parameters if we're in a parameter section
+        elseif in_params_section then
+          if params['_body'] ~= nil then
+            -- Collecting JSON body
+            params['_body'] = params['_body'] .. line
+          else
+            -- Collecting form parameters
+            local param_key, param_value = line:match('([^:]+):%s*(.+)')
+            if param_key and param_value then
+              params[param_key] = param_value
+            end
+          end
+        end
       end
     end
     file:close()
   else
     util.log_info('Could not open file: ' .. file_path)
   end
-
-  return url
+  return url, params
 end
 
 util.convert_url_to_proper_format = function(opts, url)

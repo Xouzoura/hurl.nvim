@@ -36,6 +36,9 @@ M.show = function(data, type)
   end
   if data.url then
     data.headers['url'] = data.url
+    if data.params then
+      data.headers['params'] = data.params
+    end
   end
   -- Add headers to the top
   local headers_table = utils.render_header_table(data.headers)
