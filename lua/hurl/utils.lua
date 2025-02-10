@@ -161,7 +161,7 @@ util.render_header_table = function(headers)
     line = line + 1
 
     for k, v in pairs(headers['params']) do
-      local formatted_value = string.format('{%s, %s}', k, v)
+      local formatted_value = string.format('{"%s": "%s"}', k, v)
       table.insert(result, string.format('%-' .. maxKeyLength .. 's | %s', '', formatted_value))
       line = line + 1
     end
