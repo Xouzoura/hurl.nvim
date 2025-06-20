@@ -205,11 +205,14 @@ local function execute_hurl_cmd(opts, callback)
   utils.log_info('hurl: running command' .. vim.inspect(cmd))
 
   if _HURL_GLOBAL_CONFIG.url.show then
-    local url = utils.get_url_from_hurl_file(opts[1])
+    local url, params = utils.get_url_from_hurl_file(opts[1])
     if _HURL_GLOBAL_CONFIG.url.format_without_params then
       url = utils.convert_url_to_proper_format(opts, url)
     end
     response.url = url
+    if _HURL_GLOBAL_CONFIG.url.show_body_and_query then
+      response.params = params
+    end
   end
 
   vim.fn.jobstart(cmd, {
